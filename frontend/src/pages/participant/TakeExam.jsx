@@ -92,9 +92,12 @@ export default function TakeExam() {
                 title: examData?.title
             };
 
-            sessionStorage.setItem('lastResult', JSON.stringify(resultData));
-
-            nav('/participant/result', { state: resultData });
+            sessionStorage.setItem('lastResult', JSON.stringify({
+                score: res.data.score,
+                total: questions.length,
+                title: examData?.title
+            }));
+            nav('/participant/result', { state: { score: res.data.score, total: questions.length, title: examData?.title } });
 
         } catch (e) {
             toast(e.message, 'error');

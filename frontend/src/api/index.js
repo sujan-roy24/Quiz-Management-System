@@ -53,7 +53,17 @@ export const getExamQuestions = (id) => get(`/exams/${id}/questions`);
 export const getExamResults = (id) => get(`/exams/${id}/results`);
 export const updateExam = (id, body) => put(`/exams/${id}`, body);
 export const getUpcomingExams = () => get('/exams/upcoming');
+export const getParticipants = () => get('/exams/participants');
 
 // Attempts
 export const submitAttempt = (body) => post('/attempts/submit', body);
 export const getMyAttempts = () => get('/attempts/my');
+
+//Admin
+export const getStats      = ()           => get('/admin/stats');
+export const getAdminUsers = ()           => get('/admin/users');
+export const createAdminUser = (body)     => post('/admin/users', body);
+export const changeUserRole  = (id, role) => put(`/admin/users/${id}/role`, { role });
+export const deleteAdminUser = (id)       => del(`/admin/users/${id}`);
+// export const getParticipants = ()         => get('/admin/participants');
+export const uploadQuizCSV = (csv)        => post('/admin/quizzes/upload', { csv });

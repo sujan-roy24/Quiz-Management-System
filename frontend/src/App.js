@@ -7,8 +7,6 @@ import './styles/global.css';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
-import AdminQuizzes from './pages/admin/Quizzes';
-
 import SetterExams from './pages/setter/Exams';
 import CreateExam from './pages/setter/CreateExam';
 import ExamResults from './pages/setter/ExamResults';
@@ -18,11 +16,13 @@ import TakeExam from './pages/participant/TakeExam';
 import ExamResult from './pages/participant/ExamResult';   // Fix #7
 import MyAttempts from './pages/participant/MyAttempts';
 import SelfExam from './pages/participant/SelfExam';
+import AdminDashboard from './pages/admin/Dashboard';
 
 const RoleRedirect = () => {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={`/${user.role}`} replace />;
+    const { user } = useAuth();
+    if (!user) return <Navigate to="/login" replace />;
+    if (user.role === 'admin' || user.role === 'superadmin') return <Navigate to="/admin" replace />;
+    return <Navigate to={`/${user.role}`} replace />;
 };
 
 export default function App() {
@@ -48,7 +48,8 @@ function AppRoutes() {
         <Route path="/" element={<RoleRedirect />} />
 
         {/* Admin */}
-        <Route path="/admin" element={<PrivateRoute role="admin"><AdminQuizzes /></PrivateRoute>} />
+        {/* <Route path="/admin" element={<PrivateRoute role="admin"><AdminQuizzes /></PrivateRoute>} /> */}
+        <Route path="/admin" element={<PrivateRoute role={['admin', 'superadmin']}><AdminDashboard /></PrivateRoute>} />
 
         {/* Setter */}
         <Route path="/setter" element={<PrivateRoute role="setter"><SetterExams /></PrivateRoute>} />

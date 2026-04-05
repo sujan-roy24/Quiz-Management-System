@@ -21,10 +21,8 @@ export default function AdminQuizzes() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
 
-    const [page, setPage] = useState(1);
-    const PER_PAGE = 15;
 
-    
+
     const hasFilters = filters.subject || filters.topic || filters.label || filters.search;
 
     const loadQuizzes = async () => {
@@ -60,6 +58,8 @@ export default function AdminQuizzes() {
         )
         : quizzes;
 
+    const [page, setPage] = useState(1);
+    const PER_PAGE = 15;
     const paginated = displayed.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     const totalPages = Math.ceil(displayed.length / PER_PAGE);
 
@@ -93,6 +93,26 @@ export default function AdminQuizzes() {
 
     const setFilter = (k) => (e) => setFilters(f => ({ ...f, [k]: e.target.value }));
 
+    const handleCSV = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        try {
+            const res = await api.uploadQuizCSV(text);
+            toast(res.message);
+            loadQuizzes();
+        } catch (err) { toast(err.message, 'error'); }
+        e.target.value = '';
+    };
+
+    const downloadTemplate = () => {
+        const csv = 'subject,topic,question,option1,option2,option3,option4,correct,label\nMath,Algebra,What is 2+2?,1,2,3,4,4,basic';
+        const a = document.createElement('a');
+        a.href = 'data:text/csv,' + encodeURIComponent(csv);
+        a.download = 'quiz_template.csv';
+        a.click();
+    };
+
     return (
         <div className="page">
             <div className="page-header">
@@ -102,6 +122,12 @@ export default function AdminQuizzes() {
                     {!loading && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{displayed.length} quiz{displayed.length !== 1 ? 'zes' : ''}</span>}
                 </div>
                 <button className="btn btn-primary" onClick={openCreate}>+ Add Quiz</button>
+                <button className="btn btn-ghost" onClick={downloadTemplate}>⬇ Template</button>
+                <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
+                    ⬆ Upload CSV
+                    <input type="file" accept=".csv" onChange={handleCSV} style={{ display: 'none' }} />
+                </label>
+
             </div>
 
             <div className="filter-bar">

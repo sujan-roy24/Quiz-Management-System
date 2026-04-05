@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import * as api from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { ParticipantPicker } from '../../components';
 
-const nowPlus1Min = () => new Date(Date.now() + 60000).toISOString().slice(0, 16);
+const nowPlus10Min = () => new Date(Date.now() + 10 * 60000).toISOString().slice(0, 16);
 
 export default function SelfExam() {
     const nav = useNavigate();
@@ -12,7 +13,7 @@ export default function SelfExam() {
     const { user } = useAuth();
 
     const [form, setForm] = useState({
-        title: '', startDateTime: nowPlus1Min(), durationMinutes: 20,
+        title: '', startDateTime: nowPlus10Min(), durationMinutes: 20,
         dynamicCriteria: { subject: '', topic: '', count: 5 }
     });
 
@@ -21,9 +22,9 @@ export default function SelfExam() {
     const [saving, setSaving] = useState(false);
     const [created, setCreated] = useState(null);
 
-    const [friendId, setFriendId] = useState('');
+
+    const [selectedFriends, setSelectedFriends] = useState([]);
     const [adding, setAdding] = useState(false);
-    const [addedFriends, setAddedFriends] = useState([]);
 
     useEffect(() => { api.getSubjects().then(r => setSubjects(r.data)).catch(() => { }); }, []);
     useEffect(() => {
@@ -59,14 +60,15 @@ export default function SelfExam() {
         }
     };
 
-    const addFriend = async () => {
-        if (!friendId.trim()) return;
+    const addFriends = async () => {
+        if (!selectedFriends.length) return;
         setAdding(true);
         try {
-            await api.allowParticipant({ examId: created._id, userId: friendId.trim() });
-            setAddedFriends(f => [...f, friendId.trim()]);
-            toast('Friend added!');
-            setFriendId('');
+            await Promise.all(selectedFriends.map(userId =>
+                api.allowParticipant({ examId: created._id, userId })
+            ));
+            toast(`${selectedFriends.length} friend(s) added!`);
+            setSelectedFriends([]);
         } catch (e) { toast(e.message, 'error'); }
         finally { setAdding(false); }
     };
@@ -94,7 +96,7 @@ export default function SelfExam() {
                     <button className="btn btn-ghost btn-sm" onClick={copyMyId}>Copy</button>
                 </div>
 
-                <div className="form-group">
+                {/* <div className="form-group">
                     <label>Add a friend by their User ID</label>
                     <div style={{ display: 'flex', gap: 8 }}>
                         <input value={friendId} onChange={e => setFriendId(e.target.value)} placeholder="Friend's User ID" />
@@ -114,10 +116,18 @@ export default function SelfExam() {
                             </div>
                         </div>
                     )}
+                </div> */}
+                <div className="form-group">
+                    <label>Invite Friends</label>
+                    <ParticipantPicker selected={selectedFriends} onChange={setSelectedFriends} />
+                    <button className="btn btn-primary" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}
+                        onClick={addFriends} disabled={adding || !selectedFriends.length}>
+                        {adding ? <span className="spinner" /> : `Add (${selectedFriends.length})`}
+                    </button>
                 </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-                
+
                 <button className="btn btn-ghost" onClick={() => nav('/participant')}>← Dashboard</button>
                 <button
                     className="btn btn-primary"
@@ -153,7 +163,12 @@ export default function SelfExam() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Start Date & Time</label>
-                            <input type="datetime-local" value={form.startDateTime} min={nowPlus1Min()} onChange={set('startDateTime')} required />
+                            <input type="datetime-local" value={form.startDateTime} min={nowPlus10Min()} onChange={set('startDateTime')} required />
+                            {form.startDateTime && (
+                                <p style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>
+                                    ✅ {new Date(form.startDateTime).toLocaleString()}
+                                </p>
+                            )}
                         </div>
                         <div className="form-group">
                             <label>Duration (minutes)</label>

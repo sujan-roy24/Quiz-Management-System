@@ -1,26 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFetch } from '../../hooks/useFetch';
-import { Spinner, Empty, StatusBadge, Modal, ErrorMessage } from '../../components';
+import { Spinner, Empty, StatusBadge, Modal, ErrorMessage, ParticipantPicker } from '../../components';
 import { useToast } from '../../context/ToastContext';
 import * as api from '../../api';
 
 export default function SetterExams() {
     const nav = useNavigate();
     const toast = useToast();
-    
+
     const [allowModal, setAllowModal] = useState(null);
-    const [detailModal, setDetailModal] = useState(null); // Fix #12 exam detail
-    const [userId, setUserId] = useState('');
+    const [detailModal, setDetailModal] = useState(null);
+
+    const [selectedIds, setSelectedIds] = useState([]);
+
     const [saving, setSaving] = useState(false);
-    
+
     const [editModal, setEditModal] = useState(null);
     const [editForm, setEditForm] = useState({ title: '', startDateTime: '', durationMinutes: '' });
     const [editing, setEditing] = useState(false);
-    
+
     const [statusFilter, setStatusFilter] = useState('');
     const [search, setSearch] = useState('');
-   
+
+    const [editDateError, setEditDateError] = useState('');
+
+
     const { data: exams, loading, error, reload } = useFetch(api.getMyExams);
     const displayed = (exams || [])
         .filter(ex => !statusFilter || ex.status === statusFilter)
@@ -50,14 +55,16 @@ export default function SetterExams() {
         finally { setEditing(false); }
     };
 
-    const addParticipant = async () => {
-        if (!userId.trim()) return;
+    const addParticipants = async () => {
+        if (!selectedIds.length) return;
         setSaving(true);
         try {
-            await api.allowParticipant({ examId: allowModal._id, userId: userId.trim() });
-            toast('Participant added');
-            setUserId('');
-            reload(); // refresh so participant list updates
+            await Promise.all(selectedIds.map(userId =>
+                api.allowParticipant({ examId: allowModal._id, userId })
+            ));
+            toast(`${selectedIds.length} participant(s) added`);
+            setSelectedIds([]);
+            reload();
         } catch (e) { toast(e.message, 'error'); }
         finally { setSaving(false); }
     };
@@ -118,9 +125,11 @@ export default function SetterExams() {
                                         <td><StatusBadge status={ex.status} /></td>
                                         <td>
                                             <div className="td-actions">
-                                                <button className="btn btn-ghost btn-sm" onClick={() => { setAllowModal(ex); setUserId(''); }}>Allow</button>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => { setAllowModal(ex); setSelectedIds([]); }}>Allow</button>
                                                 <button className="btn btn-ghost btn-sm" onClick={() => nav(`/setter/exams/${ex._id}/results`)}>Results</button>
-                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(ex)}>Edit</button>
+                                                {ex.status !== 'completed' && (
+                                                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(ex)}>Edit</button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -138,8 +147,12 @@ export default function SetterExams() {
                     onClose={() => setAllowModal(null)}
                     footer={<>
                         <button className="btn btn-ghost" onClick={() => setAllowModal(null)}>Close</button>
-                        <button className="btn btn-primary" onClick={addParticipant} disabled={saving || !userId.trim()}>
+                        {/* <button className="btn btn-primary" onClick={addParticipant} disabled={saving || !userId.trim()}>
                             {saving ? <span className="spinner" /> : 'Add'}
+                        </button> */}
+                        <button className="btn btn-primary" onClick={addParticipants}
+                            disabled={saving || !selectedIds.length}>
+                            {saving ? <span className="spinner" /> : `Add (${selectedIds.length})`}
                         </button>
                     </>}
                 >
@@ -149,16 +162,16 @@ export default function SetterExams() {
                             <label>Already allowed ({allowModal.allowedParticipants.length})</label>
                             <div style={{ background: 'var(--bg3)', borderRadius: 'var(--radius)', padding: '8px 12px', maxHeight: 120, overflowY: 'auto' }}>
                                 {allowModal.allowedParticipants.map(id => (
-                                    <div key={id} style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
-                                        {id}
+                                    <div key={id} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                                        🧑 {typeof id === 'object' ? id.name || id._id : id}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
                     <div className="form-group">
-                        <label>Add participant by User ID</label>
-                        <input value={userId} onChange={e => setUserId(e.target.value)} placeholder="Paste the participant's User ID" />
+                        <label>Add Participants</label>
+                        <ParticipantPicker selected={selectedIds} onChange={setSelectedIds} />
                     </div>
                 </Modal>
             )}
@@ -206,8 +219,20 @@ export default function SetterExams() {
                     </div>
                     <div className="form-group">
                         <label>Start Date & Time</label>
-                        <input type="datetime-local" value={editForm.startDateTime} onChange={e => setEditForm(f => ({ ...f, startDateTime: e.target.value }))} />
+                        <input type="datetime-local" value={editForm.startDateTime} onChange={e => {
+                            setEditForm(f => ({ ...f, startDateTime: e.target.value }));
+                            const selected = new Date(e.target.value);
+                            const original = new Date(editModal.startDateTime);
+                            const isUnchanged = selected.getTime() === original.getTime();
+                            setEditDateError(!isUnchanged && selected <= new Date() ? 'Must be future or original time' : '');
+                        }} />
+                        {editDateError && <p className="form-error">{editDateError}</p>}
                     </div>
+
+                    <button className="btn btn-primary" onClick={saveEdit} disabled={editing || !!editDateError}>
+                        {editing ? <span className="spinner" /> : 'Save'}
+                    </button>
+
                     <div className="form-group">
                         <label>Duration (minutes)</label>
                         <input type="number" value={editForm.durationMinutes} onChange={e => setEditForm(f => ({ ...f, durationMinutes: e.target.value }))} min={5} />

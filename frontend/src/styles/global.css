@@ -774,3 +774,10 @@ tr:hover td {
 @media (max-width: 640px) {
     .hide-mobile { display: none; }
 }
+
+/* global.css */
+@media (max-width: 768px) {
+    .admin-sidebar { display: none; }
+    .admin-sidebar.open { display: flex; position: fixed; inset: 0; z-index: 300; width: 220px; }
+    .admin-hamburger { display: block !important; }
+}

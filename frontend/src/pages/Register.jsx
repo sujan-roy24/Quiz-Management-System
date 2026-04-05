@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-
-const roleHome = { admin: '/admin', setter: '/setter', participant: '/participant' };
+import * as api from '../api';
 
 export default function Register() {
-    const { register } = useAuth();
     const nav = useNavigate();
     const [form, setForm] = useState({ name: '', email: '', password: '', role: 'participant' });
     const [error, setError] = useState('');
@@ -18,8 +15,8 @@ export default function Register() {
         setError('');
         setLoading(true);
         try {
-            const user = await register(form.name, form.email, form.password, form.role);
-            nav(roleHome[user.role] || '/');
+            await api.register({ name: form.name, email: form.email, password: form.password, role: form.role });
+            nav('/login', { state: { message: 'Account created! Please sign in.' } });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -51,7 +48,6 @@ export default function Register() {
                         <select value={form.role} onChange={set('role')}>
                             <option value="participant">Participant</option>
                             <option value="setter">Setter</option>
-                            <option value="admin">Admin</option>
                         </select>
                     </div>
                     <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>

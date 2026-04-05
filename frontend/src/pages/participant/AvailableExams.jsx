@@ -57,7 +57,7 @@ export default function AvailableExams() {
             ) : (
                 <div className="exam-grid">
                     {exams.map(ex => {
-                        
+
                         const start = new Date(ex.startDateTime);
                         const end = new Date(start.getTime() + ex.durationMinutes * 60000);
                         const timeLeft = getTimeLeft(ex.startDateTime, ex.durationMinutes);
@@ -77,7 +77,7 @@ export default function AvailableExams() {
 
                                 {ex.status === 'ongoing' && (
                                     <span style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-                                        ⏱ {getTimeLeft(ex)} min left
+                                        ⏱ {getTimeLeft(ex.startDateTime, ex.durationMinutes)} min left
                                     </span>
                                 )}
                                 <div className="exam-card-footer">
@@ -89,8 +89,6 @@ export default function AvailableExams() {
                         );
                     })}
                 </div>
-
-
             )}
             {upcoming?.length > 0 && (
                 <div style={{ marginTop: 32 }}>
@@ -99,12 +97,12 @@ export default function AvailableExams() {
                         {upcoming.map(ex => (
                             <div key={ex._id} className="exam-card">
                                 <div>
-                                    <div style={{ marginBottom: 6 }}><StatusBadge status={ex.status} /></div>
+                                    <div style={{ marginBottom: 6 }}><StatusBadge status="upcoming" /></div>
                                     <div className="exam-card-title">{ex.title}</div>
                                     <div className="exam-card-meta">by {ex.createdBy?.name}</div>
                                 </div>
                                 <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                                    <span>Starts: {new Date(ex.startDateTime).toLocaleString()}</span>
+                                    Starts: {new Date(ex.startDateTime).toLocaleString()}
                                 </div>
                             </div>
                         ))}

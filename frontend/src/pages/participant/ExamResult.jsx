@@ -4,14 +4,10 @@ export default function ExamResult() {
     const { state } = useLocation();
     const nav = useNavigate();
 
-    // If landed here without state, redirect away
-     const result = state || JSON.parse(sessionStorage.getItem('lastResult') || 'null');
-
-    // If no result at all, redirect away
+    const result = state || JSON.parse(sessionStorage.getItem('lastResult') || 'null');
     if (!result) return <Navigate to="/participant" replace />;
-
     const { score, total, title } = result;
-    
+
     const pct = total > 0 ? Math.round((score / total) * 100) : 0;
     const color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--accent)' : 'var(--danger)';
     const msg = pct >= 70 ? 'Great job!' : pct >= 40 ? 'Good effort!' : 'Keep practising!';

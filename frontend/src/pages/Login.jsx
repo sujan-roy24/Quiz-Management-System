@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const roleHome = { admin: '/admin', setter: '/setter', participant: '/participant' };
@@ -10,6 +10,9 @@ export default function Login() {
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const location = useLocation();
+    const successMsg = location.state?.message;
 
     const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -32,6 +35,7 @@ export default function Login() {
             <div className="auth-card card">
                 <div className="auth-logo">Quiz<span>.</span>io</div>
                 <h2 style={{ marginBottom: 20, fontSize: 20 }}>Sign in</h2>
+                {successMsg && <div className="alert alert-success">{successMsg}</div>}
                 {error && <div className="alert alert-error">{error}</div>}
                 <form onSubmit={submit}>
                     <div className="form-group">

@@ -25,12 +25,10 @@ export default function MyAttempts() {
                     <div className="table-wrap">
                         <table>
                             <thead>
-
-                                <tr><th>Exam</th><th>Score</th><th>Submitted</th></tr>
+                                <tr><th>Exam</th><th>Score</th><th>Submitted</th><th>Result</th></tr>
                             </thead>
                             <tbody>
-                                {attempts.map(a => {
-                                    // total stored on attempt answers array length
+                                {attempts.map((a, i) => {
                                     const total = a.answers?.length;
                                     return (
                                         <tr key={a._id}>
@@ -44,7 +42,7 @@ export default function MyAttempts() {
                                                 {new Date(a.submittedAt).toLocaleString()}
                                             </td>
                                             <td>
-                                                {isLatest(a) && sessionStorage.getItem('lastResult') && (
+                                                {i === 0 && sessionStorage.getItem('lastResult') && (
                                                     <button className="btn btn-ghost btn-sm" onClick={() => nav('/participant/result')}>
                                                         View Result
                                                     </button>

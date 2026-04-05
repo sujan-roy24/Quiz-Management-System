@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as api from '../../api';
 import { useToast } from '../../context/ToastContext';
 
-const nowPlus1Min = () => new Date(Date.now() + 60000).toISOString().slice(0, 16);
+const nowPlus10Min = () => new Date(Date.now() + 10 * 60000).toISOString().slice(0, 16);
 // Fix #14 - minimum allowed datetime for the input
 const minDatetime = () => new Date(Date.now() + 60000).toISOString().slice(0, 16);
 
@@ -12,7 +12,7 @@ export default function CreateExam() {
     const toast = useToast();
     const [form, setForm] = useState({
         title: '', quizSelectionType: 'dynamic',
-        startDateTime: nowPlus1Min(), durationMinutes: 30,
+        startDateTime: nowPlus10Min(), durationMinutes: 30,
         dynamicCriteria: { subject: '', topic: '', label: 'basic', count: 10 },
         selectedQuizIds: []
     });
@@ -98,6 +98,7 @@ export default function CreateExam() {
                             {form.title.length}/80
                         </p>
                     </div>
+
                     <div className="form-row">
                         <div className="form-group">
                             <label>Start Date & Time</label>
@@ -108,7 +109,11 @@ export default function CreateExam() {
                                 onChange={set('startDateTime')}
                                 required
                             />
-                            {/* Fix #14 - inline error */}
+                            {form.startDateTime && (
+                                <p style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>
+                                    ✅ {new Date(form.startDateTime).toLocaleString()}
+                                </p>
+                            )}
                             {dateError && <p className="form-error">{dateError}</p>}
                         </div>
                         <div className="form-group">
