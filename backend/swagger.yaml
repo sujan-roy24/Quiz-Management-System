@@ -1,0 +1,286 @@
+openapi: 3.0.0
+info:
+  title: Quiz Management System API
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string, minLength: 6 }
+                role: { type: string, enum: [admin, setter, participant] }
+      responses:
+        '201': { description: Registered successfully }
+        '400': { description: Validation error }
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200': { description: Returns token and user }
+        '401': { description: Invalid credentials }
+
+  /quizzes:
+    get:
+      summary: Get all quizzes (Admin only)
+      tags: [Quiz]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: subject
+          in: query
+          schema: { type: string }
+        - name: topic
+          in: query
+          schema: { type: string }
+        - name: label
+          in: query
+          schema: { type: string, enum: [basic, intermediate, advanced] }
+      responses:
+        '200': { description: List of quizzes }
+    post:
+      summary: Create a quiz (Admin only)
+      tags: [Quiz]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizInput'
+      responses:
+        '201': { description: Quiz created }
+  /quizzes/{id}:
+    put:
+      summary: Update quiz (Admin only)
+      tags: [Quiz]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizInput'
+      responses:
+        '200': { description: Updated quiz }
+    delete:
+      summary: Delete quiz (Admin only)
+      tags: [Quiz]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Deleted }
+  /quizzes/filter-options:
+    get:
+      summary: Get distinct subjects and topics
+      tags: [Quiz]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: { subjects, topics } }
+
+  /exams:
+    post:
+      summary: Create exam (Setter only)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamInput'
+      responses:
+        '201': { description: Exam created }
+  /exams/self:
+    post:
+      summary: Create self-exam (Participant only, dynamic basic)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, dynamicCriteria, startDateTime, durationMinutes]
+              properties:
+                title: { type: string }
+                dynamicCriteria:
+                  type: object
+                  properties:
+                    subject: { type: string }
+                    topic: { type: string }
+                    count: { type: number }
+                startDateTime: { type: string, format: date-time }
+                durationMinutes: { type: number }
+      responses:
+        '201': { description: Self-exam created }
+  /exams/allow:
+    put:
+      summary: Allow a participant to take an exam
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examId, userId]
+              properties:
+                examId: { type: string }
+                userId: { type: string }
+      responses:
+        '200': { description: Participant allowed }
+  /exams/available:
+    get:
+      summary: Get exams available for current user
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of exams }
+
+  # 👇 ADD FROM HERE
+  /exams/{id}/questions:
+    get:
+      summary: Get questions for a specific exam (Participant only)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of exam questions
+
+  /exams/{id}/results:
+    get:
+      summary: Get exam results (Setter/Admin only)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exam results
+
+  /exams/mine:
+    get:
+      summary: Get exams created by the logged-in setter
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: List of my exams 
+
+  /exams/{id}:
+    put:
+      summary: Update the upcoming exams
+      tax: [Exam]
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Exam updated
+
+  /attempts/submit:
+    post:
+      summary: Submit answers for an exam
+      tags: [Attempt]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examId, answers]
+              properties:
+                examId: { type: string }
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      quizId: { type: string }
+                      selectedOption: { type: string }
+      responses:
+        '200': { description: Score returned }
+  /attempts/my:
+    get:
+      summary: Get my attempt history
+      tags: [Attempt]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of attempts }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    QuizInput:
+      type: object
+      required: [subjectName, topicName, questionText, options, correctAnswer, label]
+      properties:
+        subjectName: { type: string }
+        topicName: { type: string }
+        questionText: { type: string }
+        options: { type: array, items: { type: string } }
+        correctAnswer: { type: string }
+        label: { type: string, enum: [basic, intermediate, advanced] }
+    ExamInput:
+      type: object
+      required: [title, quizSelectionType, startDateTime, durationMinutes]
+      properties:
+        title: { type: string }
+        quizSelectionType: { type: string, enum: [manual, dynamic] }
+        selectedQuizIds: { type: array, items: { type: string } }  # if manual
+        dynamicCriteria:
+          type: object
+          properties:
+            subject: { type: string }
+            topic: { type: string }
+            label: { type: string }
+            count: { type: number }
+        startDateTime: { type: string, format: date-time }
+        durationMinutes: { type: number }
+        allowedParticipants: { type: array, items: { type: string } }
