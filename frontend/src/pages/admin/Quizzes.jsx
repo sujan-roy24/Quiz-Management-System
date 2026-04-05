@@ -21,6 +21,10 @@ export default function AdminQuizzes() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
 
+    const [page, setPage] = useState(1);
+    const PER_PAGE = 15;
+
+    
     const hasFilters = filters.subject || filters.topic || filters.label || filters.search;
 
     const loadQuizzes = async () => {
@@ -36,6 +40,8 @@ export default function AdminQuizzes() {
         } catch (e) { setError(e.message); }
         finally { setLoading(false); }
     };
+
+    useEffect(() => setPage(1), [filters]);
 
     useEffect(() => { loadQuizzes(); }, [filters.subject, filters.topic, filters.label]);
     useEffect(() => { api.getSubjects().then(r => setSubjects(r.data)).catch(() => { }); }, []);
@@ -53,6 +59,10 @@ export default function AdminQuizzes() {
             q.topicName.toLowerCase().includes(filters.search.toLowerCase())
         )
         : quizzes;
+
+    const paginated = displayed.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+    const totalPages = Math.ceil(displayed.length / PER_PAGE);
+
 
     const openCreate = () => { setForm(EMPTY_FORM); setModal('create'); };
     const openEdit = (q) => {
@@ -122,7 +132,7 @@ export default function AdminQuizzes() {
             <ErrorMessage message={error} />
 
             <div className="card" style={{ padding: 0 }}>
-                {loading ? <Spinner /> : displayed.length === 0 ? (
+                {loading ? <Spinner /> : paginated.length === 0 ? (
                     // Fix #10 - clear filters button inside empty state
                     <Empty
                         title="No quizzes found"
@@ -136,7 +146,7 @@ export default function AdminQuizzes() {
                                 <tr><th>Subject</th><th>Topic</th><th>Question</th><th>Level</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
-                                {displayed.map(q => (
+                                {paginated.map(q => (
                                     <tr key={q._id}>
                                         <td>{q.subjectName}</td>
                                         <td>{q.topicName}</td>
@@ -152,6 +162,13 @@ export default function AdminQuizzes() {
                                 ))}
                             </tbody>
                         </table>
+                        {totalPages > 1 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: 16 }}>
+                                <button className="btn btn-ghost btn-sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>← Prev</button>
+                                <span style={{ fontSize: 13, color: 'var(--muted)' }}>{page} / {totalPages}</span>
+                                <button className="btn btn-ghost btn-sm" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>Next →</button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -179,7 +196,17 @@ export default function AdminQuizzes() {
                     </div>
                     <div className="form-group">
                         <label>Question</label>
-                        <textarea rows={3} value={form.questionText} onChange={e => setForm(f => ({ ...f, questionText: e.target.value }))} style={{ resize: 'vertical' }} required />
+                        <textarea
+                            rows={3}
+                            value={form.questionText}
+                            onChange={e => setForm(f => ({ ...f, questionText: e.target.value }))}
+                            maxLength={300}
+                            style={{ resize: 'vertical' }}
+                            required
+                        />
+                        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4, textAlign: 'right' }}>
+                            {form.questionText.length}/300
+                        </p>
                     </div>
                     <div className="form-group">
                         <label>Options</label>

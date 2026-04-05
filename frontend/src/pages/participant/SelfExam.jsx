@@ -10,16 +10,20 @@ export default function SelfExam() {
     const nav = useNavigate();
     const toast = useToast();
     const { user } = useAuth();
+
     const [form, setForm] = useState({
         title: '', startDateTime: nowPlus1Min(), durationMinutes: 20,
         dynamicCriteria: { subject: '', topic: '', count: 5 }
     });
+
     const [subjects, setSubjects] = useState([]);
     const [topics, setTopics] = useState([]);
     const [saving, setSaving] = useState(false);
     const [created, setCreated] = useState(null);
+
     const [friendId, setFriendId] = useState('');
     const [adding, setAdding] = useState(false);
+    const [addedFriends, setAddedFriends] = useState([]);
 
     useEffect(() => { api.getSubjects().then(r => setSubjects(r.data)).catch(() => { }); }, []);
     useEffect(() => {
@@ -60,6 +64,7 @@ export default function SelfExam() {
         setAdding(true);
         try {
             await api.allowParticipant({ examId: created._id, userId: friendId.trim() });
+            setAddedFriends(f => [...f, friendId.trim()]);
             toast('Friend added!');
             setFriendId('');
         } catch (e) { toast(e.message, 'error'); }
@@ -71,7 +76,7 @@ export default function SelfExam() {
         navigator.clipboard.writeText(user.id);
         toast('Your User ID copied!');
     };
-
+    const canTake = created && new Date() >= new Date(created.startDateTime);
     if (created) return (
         <div className="page" style={{ maxWidth: 540 }}>
             <div className="page-header"><h1>Exam Created!</h1></div>
@@ -97,11 +102,31 @@ export default function SelfExam() {
                             {adding ? <span className="spinner" /> : 'Add'}
                         </button>
                     </div>
+                    {addedFriends.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                            <label>Added ({addedFriends.length})</label>
+                            <div style={{ background: 'var(--bg3)', borderRadius: 'var(--radius)', padding: '8px 12px', maxHeight: 100, overflowY: 'auto' }}>
+                                {addedFriends.map(id => (
+                                    <div key={id} style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                                        {id}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
+                
                 <button className="btn btn-ghost" onClick={() => nav('/participant')}>← Dashboard</button>
-                <button className="btn btn-primary" onClick={() => nav(`/participant/exam/${created._id}`)}>Take Exam Now →</button>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => nav(`/participant/exam/${created._id}`)}
+                    disabled={!canTake}
+                    title={!canTake ? `Starts at ${new Date(created.startDateTime).toLocaleString()}` : ''}
+                >
+                    {canTake ? 'Take Exam Now →' : `Starts at ${new Date(created.startDateTime).toLocaleTimeString()}`}
+                </button>
             </div>
         </div>
     );

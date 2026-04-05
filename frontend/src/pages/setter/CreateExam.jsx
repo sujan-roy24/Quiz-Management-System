@@ -87,7 +87,16 @@ export default function CreateExam() {
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="form-group">
                         <label>Exam Title</label>
-                        <input value={form.title} onChange={set('title')} required placeholder="e.g. Math Mid-Term" />
+                        <input
+                            value={form.title}
+                            onChange={set('title')}
+                            maxLength={80}
+                            required
+                            placeholder="e.g. Math Mid-Term"
+                        />
+                        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4, textAlign: 'right' }}>
+                            {form.title.length}/80
+                        </p>
                     </div>
                     <div className="form-row">
                         <div className="form-group">

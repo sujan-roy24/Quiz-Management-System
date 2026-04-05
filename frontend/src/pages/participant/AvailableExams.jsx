@@ -5,6 +5,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import * as api from '../../api';
 
+const getTimeLeft = (startDateTime, durationMinutes) => {
+    const end = new Date(startDateTime).getTime() + durationMinutes * 60000;
+    return Math.max(0, Math.floor((end - Date.now()) / 60000));
+};
+
 export default function AvailableExams() {
     const nav = useNavigate();
     const toast = useToast();
@@ -24,6 +29,8 @@ export default function AvailableExams() {
     };
 
     const fmt = (d) => new Date(d).toLocaleString();
+
+
 
     return (
         <div className="page">
@@ -50,7 +57,11 @@ export default function AvailableExams() {
             ) : (
                 <div className="exam-grid">
                     {exams.map(ex => {
-                        const end = new Date(new Date(ex.startDateTime).getTime() + ex.durationMinutes * 60000);
+                        
+                        const start = new Date(ex.startDateTime);
+                        const end = new Date(start.getTime() + ex.durationMinutes * 60000);
+                        const timeLeft = getTimeLeft(ex.startDateTime, ex.durationMinutes);
+
                         return (
                             <div key={ex._id} className="exam-card">
                                 <div>
@@ -63,6 +74,12 @@ export default function AvailableExams() {
                                     <span>Ends: {fmt(end)}</span>
                                     <span>Duration: {ex.durationMinutes} minutes</span>
                                 </div>
+
+                                {ex.status === 'ongoing' && (
+                                    <span style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                                        ⏱ {getTimeLeft(ex)} min left
+                                    </span>
+                                )}
                                 <div className="exam-card-footer">
                                     <button className="btn btn-primary btn-sm" onClick={() => nav(`/participant/exam/${ex._id}`)}>
                                         Start Exam →

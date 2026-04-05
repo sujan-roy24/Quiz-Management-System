@@ -5,9 +5,10 @@ import * as api from '../../api';
 
 export default function MyAttempts() {
     const nav = useNavigate();
-    // Fix #18 - show error from useFetch
+
     const { data: attempts, loading, error } = useFetch(api.getMyAttempts);
 
+    const isLatest = (a) => a._id === attempts?.[0]?._id;
     return (
         <div className="page">
             <div className="page-header">
@@ -24,7 +25,7 @@ export default function MyAttempts() {
                     <div className="table-wrap">
                         <table>
                             <thead>
-                                {/* Fix #8 - show score / total */}
+
                                 <tr><th>Exam</th><th>Score</th><th>Submitted</th></tr>
                             </thead>
                             <tbody>
@@ -41,6 +42,13 @@ export default function MyAttempts() {
                                             </td>
                                             <td style={{ color: 'var(--muted)', fontSize: 13 }}>
                                                 {new Date(a.submittedAt).toLocaleString()}
+                                            </td>
+                                            <td>
+                                                {isLatest(a) && sessionStorage.getItem('lastResult') && (
+                                                    <button className="btn btn-ghost btn-sm" onClick={() => nav('/participant/result')}>
+                                                        View Result
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     );

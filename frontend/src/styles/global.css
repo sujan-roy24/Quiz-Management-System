@@ -770,3 +770,7 @@ tr:hover td {
         display: none;
     }
 }
+
+@media (max-width: 640px) {
+    .hide-mobile { display: none; }
+}
