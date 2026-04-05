@@ -1,9 +1,11 @@
 openapi: 3.0.0
 info:
   title: Quiz Management System API
+  description: API for managing quizzes, exams, users, and attempts
   version: 1.0.0
 servers:
   - url: http://localhost:5000/api
+
 paths:
   /auth/register:
     post:
@@ -18,12 +20,13 @@ paths:
               required: [name, email, password, role]
               properties:
                 name: { type: string }
-                email: { type: string }
+                email: { type: string, format: email }
                 password: { type: string, minLength: 6 }
                 role: { type: string, enum: [admin, setter, participant] }
       responses:
         '201': { description: Registered successfully }
         '400': { description: Validation error }
+
   /auth/login:
     post:
       summary: Login user
@@ -36,12 +39,13 @@ paths:
               type: object
               required: [email, password]
               properties:
-                email: { type: string }
+                email: { type: string, format: email }
                 password: { type: string }
       responses:
-        '200': { description: Returns token and user }
+        '200': { description: Returns JWT token and user info }
         '401': { description: Invalid credentials }
 
+  # ==================== QUIZ ROUTES ====================
   /quizzes:
     get:
       summary: Get all quizzes (Admin only)
@@ -59,8 +63,9 @@ paths:
           schema: { type: string, enum: [basic, intermediate, advanced] }
       responses:
         '200': { description: List of quizzes }
+
     post:
-      summary: Create a quiz (Admin only)
+      summary: Create a new quiz (Admin only)
       tags: [Quiz]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -70,10 +75,11 @@ paths:
             schema:
               $ref: '#/components/schemas/QuizInput'
       responses:
-        '201': { description: Quiz created }
+        '201': { description: Quiz created successfully }
+
   /quizzes/{id}:
     put:
-      summary: Update quiz (Admin only)
+      summary: Update a quiz (Admin only)
       tags: [Quiz]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -88,9 +94,10 @@ paths:
             schema:
               $ref: '#/components/schemas/QuizInput'
       responses:
-        '200': { description: Updated quiz }
+        '200': { description: Quiz updated successfully }
+
     delete:
-      summary: Delete quiz (Admin only)
+      summary: Delete a quiz (Admin only)
       tags: [Quiz]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -99,18 +106,21 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '200': { description: Deleted }
+        '200': { description: Quiz deleted successfully }
+
   /quizzes/filter-options:
     get:
-      summary: Get distinct subjects and topics
+      summary: Get distinct subjects and topics for filtering
       tags: [Quiz]
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: { subjects, topics } }
+        '200':
+          description: Returns unique subjects and topics
 
+  # ==================== EXAM ROUTES ====================
   /exams:
     post:
-      summary: Create exam (Setter only)
+      summary: Create a new exam (Setter only)
       tags: [Exam]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -120,10 +130,11 @@ paths:
             schema:
               $ref: '#/components/schemas/ExamInput'
       responses:
-        '201': { description: Exam created }
+        '201': { description: Exam created successfully }
+
   /exams/self:
     post:
-      summary: Create self-exam (Participant only, dynamic basic)
+      summary: Create a self-exam (Participant only - dynamic basic questions)
       tags: [Exam]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -140,11 +151,35 @@ paths:
                   properties:
                     subject: { type: string }
                     topic: { type: string }
-                    count: { type: number }
+                    count: { type: integer, minimum: 1 }
                 startDateTime: { type: string, format: date-time }
-                durationMinutes: { type: number }
+                durationMinutes: { type: integer, minimum: 5 }
       responses:
-        '201': { description: Self-exam created }
+        '201': { description: Self-exam created successfully }
+
+  /exams/{id}:
+    put:
+      summary: Update an exam (Setter/Admin)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                startDateTime: { type: string, format: date-time }
+                durationMinutes: { type: integer }
+      responses:
+        '200': { description: Exam updated successfully }
+
   /exams/allow:
     put:
       summary: Allow a participant to take an exam
@@ -161,45 +196,23 @@ paths:
                 examId: { type: string }
                 userId: { type: string }
       responses:
-        '200': { description: Participant allowed }
+        '200': { description: Participant allowed successfully }
+
   /exams/available:
     get:
-      summary: Get exams available for current user
+      summary: Get exams available for the current user (Participant)
       tags: [Exam]
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: List of exams }
+        '200': { description: List of available exams }
 
-  # 👇 ADD FROM HERE
-  /exams/{id}/questions:
+  /exams/upcoming:
     get:
-      summary: Get questions for a specific exam (Participant only)
+      summary: Get upcoming exams for the current participant
       tags: [Exam]
       security: [{ bearerAuth: [] }]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
-        '200':
-          description: List of exam questions
-
-  /exams/{id}/results:
-    get:
-      summary: Get exam results (Setter/Admin only)
-      tags: [Exam]
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Exam results
+        '200': { description: List of upcoming exams }
 
   /exams/mine:
     get:
@@ -207,21 +220,46 @@ paths:
       tags: [Exam]
       security: [{ bearerAuth: [] }]
       responses:
-        '200':
-          description: List of my exams 
+        '200': { description: List of my created exams }
 
-  /exams/{id}:
-    put:
-      summary: Update the upcoming exams
-      tax: [Exam]
-      security: [{bearerAuth: []}]
+  /exams/participants:
+    get:
+      summary: Get all participants (for dropdown selection)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
       responses:
-        '200':
-          description: Exam updated
+        '200': { description: List of participants }
 
+  /exams/{id}/questions:
+    get:
+      summary: Get questions for a specific exam (Participant)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: List of exam questions }
+
+  /exams/{id}/results:
+    get:
+      summary: Get results for a specific exam (Setter/Admin only)
+      tags: [Exam]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Exam results }
+
+  # ==================== ATTEMPT ROUTES ====================
   /attempts/submit:
     post:
-      summary: Submit answers for an exam
+      summary: Submit answers for an exam attempt
       tags: [Attempt]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -237,18 +275,110 @@ paths:
                   type: array
                   items:
                     type: object
+                    required: [quizId, selectedOption]
                     properties:
                       quizId: { type: string }
                       selectedOption: { type: string }
       responses:
-        '200': { description: Score returned }
+        '200': { description: Attempt submitted, score returned }
+
   /attempts/my:
     get:
-      summary: Get my attempt history
+      summary: Get attempt history of the current user
       tags: [Attempt]
       security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: List of attempts }
+        '200': { description: List of my attempts }
+
+  # ==================== ADMIN ROUTES ====================
+  /admin/stats:
+    get:
+      summary: Get admin dashboard statistics
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Dashboard stats returned }
+
+  /admin/users:
+    get:
+      summary: Get all users (Admin only)
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of all users }
+
+    post:
+      summary: Create a user manually (Admin only)
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 6 }
+                role: { type: string, enum: [admin, setter, participant] }
+      responses:
+        '201': { description: User created successfully }
+
+  /admin/users/{id}/role:
+    put:
+      summary: Change user role (Admin only)
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [admin, setter, participant] }
+      responses:
+        '200': { description: User role updated }
+
+  /admin/users/{id}:
+    delete:
+      summary: Delete a user (Super Admin only)
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: User deleted successfully }
+
+  /admin/quizzes/upload:
+    post:
+      summary: Bulk upload quizzes via CSV (Admin only)
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [csv]
+              properties:
+                csv: 
+                  type: string
+                  description: Raw CSV content as string
+      responses:
+        '200': { description: Quizzes imported successfully }
 
 components:
   securitySchemes:
@@ -256,6 +386,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
     QuizInput:
       type: object
@@ -264,23 +395,35 @@ components:
         subjectName: { type: string }
         topicName: { type: string }
         questionText: { type: string }
-        options: { type: array, items: { type: string } }
+        options: 
+          type: array
+          items: { type: string }
+          minItems: 2
         correctAnswer: { type: string }
-        label: { type: string, enum: [basic, intermediate, advanced] }
+        label: 
+          type: string
+          enum: [basic, intermediate, advanced]
+
     ExamInput:
       type: object
       required: [title, quizSelectionType, startDateTime, durationMinutes]
       properties:
         title: { type: string }
-        quizSelectionType: { type: string, enum: [manual, dynamic] }
-        selectedQuizIds: { type: array, items: { type: string } }  # if manual
+        quizSelectionType: 
+          type: string
+          enum: [manual, dynamic]
+        selectedQuizIds: 
+          type: array
+          items: { type: string }
         dynamicCriteria:
           type: object
           properties:
             subject: { type: string }
             topic: { type: string }
-            label: { type: string }
-            count: { type: number }
+            label: { type: string, enum: [basic, intermediate, advanced] }
+            count: { type: integer, minimum: 1 }
         startDateTime: { type: string, format: date-time }
-        durationMinutes: { type: number }
-        allowedParticipants: { type: array, items: { type: string } }
+        durationMinutes: { type: integer, minimum: 5 }
+        allowedParticipants: 
+          type: array
+          items: { type: string }

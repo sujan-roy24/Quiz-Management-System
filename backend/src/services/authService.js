@@ -8,7 +8,7 @@ const register = async (name, email, password, role) => {
     if (await User.findOne({ email })) throw new Error('Email already exists');
     const passwordHash = await hashPassword(password);
     const user = await User.create({ name, email, passwordHash, role });
-    return { token: generateToken(user._id, user.role), user: formatUser(user) };
+    return { user: formatUser(user) };
 };
 
 const login = async (email, password) => {

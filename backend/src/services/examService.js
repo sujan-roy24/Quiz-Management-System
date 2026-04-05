@@ -34,9 +34,9 @@ const createExam = async (examData) => {
 const allowParticipant = async (examId, userId, requesterId) => {
     const exam = await Exam.findById(examId);
     if (!exam) throw new Error('Exam not found');
-    if (exam.createdBy.toString() !== requesterId) throw new Error('Not authorized');
-
-    if (!exam.allowedParticipants.includes(userId)) {
+    if (exam.createdBy.toString() !== requesterId)
+        throw new Error('Only the exam creator can add participants');
+    if (!exam.allowedParticipants.map(p => p.toString()).includes(userId)) {
         exam.allowedParticipants.push(userId);
         await exam.save();
     }
@@ -74,21 +74,32 @@ const getExamResults = async (examId) => {
     }));
 };
 
-const getMyExams = (userId) => Exam.find({ createdBy: userId });
+const getMyExams = (userId) =>
+    Exam.find({ createdBy: userId }).populate('createdBy', 'name');
 
 const updateExam = async (examId, userId, data) => {
     const exam = await Exam.findById(examId);
     if (!exam) throw new Error('Exam not found');
     if (exam.createdBy.toString() !== userId) throw new Error('Not authorized');
+    if (withStatus(exam).status === 'completed') throw new Error('Cannot edit a completed exam');
+
+    // Date validation AFTER exam is fetched
+    if (data.startDateTime) {
+        const newDate = new Date(data.startDateTime);
+        const isUnchanged = newDate.getTime() === new Date(exam.startDateTime).getTime();
+        const isFuture = newDate > new Date();
+        if (!isUnchanged && !isFuture)
+            throw new Error('Start time must be in the future or unchanged');
+    }
+
     Object.assign(exam, data);
     return exam.save();
 };
 
 const getUpcomingExams = async (userId) => {
-    const now = new Date();
     const exams = await Exam.find({
         allowedParticipants: userId,
-        startDateTime: { $gt: now }
+        startDateTime: { $gt: new Date() }
     }).populate('createdBy', 'name');
     return exams.map(withStatus);
 };
