@@ -74,4 +74,18 @@ const getTopics = async (req, res) => {
     }
 };
 
-module.exports = { getAllQuizzes, createQuiz, updateQuiz, deleteQuiz, getFilterOptions, getSubjects, getTopics };
+const getMatchCount = async (req, res) => {
+    try {
+        const { subjects, topic, label } = req.query;
+        const query = {};
+        if (subjects) query.subjectName = { $in: subjects.split(',') };
+        if (topic)    query.topicName = topic;
+        if (label)    query.label = label;
+        const count = await Quiz.countDocuments(query);
+        res.json({ success: true, data: count });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+module.exports = { getAllQuizzes, createQuiz, updateQuiz, deleteQuiz, getFilterOptions, getSubjects, getTopics, getMatchCount };

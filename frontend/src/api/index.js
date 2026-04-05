@@ -67,3 +67,5 @@ export const changeUserRole  = (id, role) => put(`/admin/users/${id}/role`, { ro
 export const deleteAdminUser = (id)       => del(`/admin/users/${id}`);
 // export const getParticipants = ()         => get('/admin/participants');
 export const uploadQuizCSV = (csv)        => post('/admin/quizzes/upload', { csv });
+
+export const getMatchCount = (params) => get('/quizzes/match-count?' + new URLSearchParams(params));

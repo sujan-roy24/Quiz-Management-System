@@ -6,7 +6,7 @@ const examSchema = new mongoose.Schema({
     quizSelectionType: { type: String, enum: ['manual', 'dynamic'], required: true },
     selectedQuizIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' }],
     dynamicCriteria: {
-        subject: String,
+        subject: [String],
         topic: String,
         label: String,
         count: Number

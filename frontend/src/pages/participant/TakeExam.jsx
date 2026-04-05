@@ -45,29 +45,6 @@ export default function TakeExam() {
         load();
     }, [id]);
 
-    // Fix #7 - navigate to result screen with score data
-    // const submit = useCallback(async (auto = false) => {
-    //     if (submitted.current) return;
-    //     submitted.current = true;
-    //     if (!auto && !window.confirm('Submit exam? You cannot change answers after submission.')) {
-    //         submitted.current = false;
-    //         return;
-    //     }
-    //     setSubmitting(true);
-    //     try {
-    //         const ans = questions.map(q => ({ quizId: q._id, selectedOption: answers[q._id] || '' }));
-    //         const res = await api.submitAttempt({ examId: id, answers: ans });
-    //         nav('/participant/result', {
-    //             state: { score: res.data.score, total: questions.length, title: examData?.title }
-    //         });
-    //     } catch (e) {
-    //         toast(e.message, 'error');
-    //         submitted.current = false;
-    //     } finally {
-    //         setSubmitting(false);
-    //     }
-    // }, [answers, questions, id, nav, examData]);
-
     const submit = useCallback(async (auto = false) => {
         if (submitted.current) return;
         submitted.current = true;
@@ -85,12 +62,6 @@ export default function TakeExam() {
             }));
 
             const res = await api.submitAttempt({ examId: id, answers: ans });
-
-            const resultData = {
-                score: res.data.score,
-                total: questions.length,
-                title: examData?.title
-            };
 
             sessionStorage.setItem('lastResult', JSON.stringify({
                 score: res.data.score,
