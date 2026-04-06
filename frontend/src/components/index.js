@@ -1,5 +1,6 @@
 import { Navigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useState, useEffect } from 'react';
 import * as api from '../api';
 
@@ -50,22 +51,25 @@ const navLinks = {
 
 export const Navbar = () => {
     const { user, logout } = useAuth();
+    const { theme, toggle } = useTheme();
+
 
     if (user?.role === 'admin' || user?.role === 'superadmin') return null;
     // Fix #17 - logout confirmation
     const handleLogout = () => {
-        if (window.confirm('Are you sure you want to logout?')) logout();
+        // if (window.confirm('Are you sure you want to logout?')) 
+        logout();
     };
 
     return (
         <nav className="navbar">
-            <span className="navbar-brand">Quiz<span>.</span>io</span>
+            <span className="navbar-brand">Quiz<span>.</span>MS</span>
 
-            {/* Fix #2 - role nav links */}
             {user && (
                 <div className="navbar-links">
                     {(navLinks[user.role] || []).map(l => (
-                        <NavLink key={l.to} to={l.to} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} end>
+                        <NavLink key={l.to} to={l.to}
+                            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} end>
                             {l.label}
                         </NavLink>
                     ))}
@@ -73,35 +77,21 @@ export const Navbar = () => {
             )}
 
             <div className="navbar-right">
+                {/* Theme toggle */}
+                <button className="btn btn-ghost btn-sm" onClick={toggle} title="Toggle theme">
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                </button>
+
                 {user && (
                     <>
-                        {/* Fix #9 - show user ID copyable */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                            }}
-                        >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Avatar name={user.name} />
-
-                            <span
-                                className="navbar-user"
-                                title={`Your ID: ${user.id}`}
-                            >
+                            <span className="navbar-user" title={`Your ID: ${user.id}`}>
                                 <strong>{user.name}</strong>{' '}
-                                <span className={`badge badge-${user.role}`}>
-                                    {user.role}
-                                </span>
+                                <span className={`badge badge-${user.role}`}>{user.role}</span>
                             </span>
                         </div>
-
-                        <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={handleLogout}
-                        >
-                            Logout
-                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={handleLogout}>Logout</button>
                     </>
                 )}
             </div>

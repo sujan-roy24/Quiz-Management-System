@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { Navbar, PrivateRoute, PublicRoute, NotFound } from './components';
 import './styles/global.css';
@@ -16,7 +17,8 @@ import TakeExam from './pages/participant/TakeExam';
 import ExamResult from './pages/participant/ExamResult';   // Fix #7
 import MyAttempts from './pages/participant/MyAttempts';
 import SelfExam from './pages/participant/SelfExam';
-import AdminDashboard from './pages/admin/Dashboard';
+import Dashboard from './pages/admin/Dashboard';
+
 
 const RoleRedirect = () => {
     const { user } = useAuth();
@@ -28,11 +30,14 @@ const RoleRedirect = () => {
 export default function App() {
   return (
     <BrowserRouter>
+    <ThemeProvider>
+
       <AuthProvider>
         <ToastProvider>
           <AppRoutes />
         </ToastProvider>
       </AuthProvider>
+    </ThemeProvider>
     </BrowserRouter>
   );
 }
@@ -42,14 +47,14 @@ function AppRoutes() {
     <div className="layout">
       <Navbar />
       <Routes>
-        {/* Fix #1 - PublicRoute redirects logged-in users */}
+        
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/" element={<RoleRedirect />} />
 
         {/* Admin */}
-        {/* <Route path="/admin" element={<PrivateRoute role="admin"><AdminQuizzes /></PrivateRoute>} /> */}
-        <Route path="/admin" element={<PrivateRoute role={['admin', 'superadmin']}><AdminDashboard /></PrivateRoute>} />
+        
+        <Route path="/admin" element={<PrivateRoute role={['admin', 'superadmin']}><Dashboard /></PrivateRoute>} />
 
         {/* Setter */}
         <Route path="/setter" element={<PrivateRoute role="setter"><SetterExams /></PrivateRoute>} />

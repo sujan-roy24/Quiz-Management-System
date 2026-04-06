@@ -27,7 +27,7 @@ export default function Register() {
     return (
         <div className="auth-page">
             <div className="auth-card card">
-                <div className="auth-logo">Quiz<span>.</span>io</div>
+                <div className="auth-logo">Quiz<span>.</span>MS</div>
                 <h2 style={{ marginBottom: 20, fontSize: 20 }}>Create account</h2>
                 {error && <div className="alert alert-error">{error}</div>}
                 <form onSubmit={submit}>

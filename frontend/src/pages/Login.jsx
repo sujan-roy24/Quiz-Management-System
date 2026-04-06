@@ -38,7 +38,7 @@ export default function Login() {
     return (
         <div className="auth-page">
             <div className="auth-card card">
-                <div className="auth-logo">Quiz<span>.</span>io</div>
+                <div className="auth-logo">Quiz<span>.</span>MS</div>
                 <h2 style={{ marginBottom: 20, fontSize: 20 }}>Sign in</h2>
                 {successMsg && <div className="alert alert-success">{successMsg}</div>}
                 {error && <div className="alert alert-error">{error}</div>}
