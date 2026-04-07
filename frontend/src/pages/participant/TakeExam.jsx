@@ -43,6 +43,7 @@ export default function TakeExam() {
             }
         };
         load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const submit = useCallback(async (auto = false) => {
@@ -76,6 +77,7 @@ export default function TakeExam() {
         } finally {
             setSubmitting(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [answers, questions, id, nav, examData]);
 
     useEffect(() => {

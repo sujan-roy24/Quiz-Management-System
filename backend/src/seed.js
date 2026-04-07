@@ -6,11 +6,11 @@ const Quiz = require('./models/Quiz');
 
 
 const users = [
-    { name: 'Super Admin', email: 'superadmin@quiz.io', password: 'super123', role: 'superadmin' },
-    { name: 'Admin User', email: 'admin@quiz.io', password: 'admin123', role: 'admin' },
-    { name: 'John Setter', email: 'setter@quiz.io', password: 'setter123', role: 'setter' },
-    { name: 'Alice Participant', email: 'alice@quiz.io', password: 'alice123', role: 'participant' },
-    { name: 'Bob Participant', email: 'bob@quiz.io', password: 'bob123', role: 'participant' },
+    { name: 'Super Admin', email: 'superadmin@quiz.com', password: 'super123', role: 'superadmin' },
+    { name: 'Admin User', email: 'admin@quiz.com', password: 'admin123', role: 'admin' },
+    { name: 'John Setter', email: 'setter@quiz.com', password: 'setter123', role: 'setter' },
+    { name: 'Alice Participant', email: 'alice@quiz.com', password: 'alice123', role: 'participant' },
+    { name: 'Bob Participant', email: 'bob@quiz.com', password: 'bob123', role: 'participant' },
 ];
 
 const quizzes = [

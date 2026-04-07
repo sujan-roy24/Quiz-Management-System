@@ -8,7 +8,6 @@ export default function MyAttempts() {
 
     const { data: attempts, loading, error } = useFetch(api.getMyAttempts);
 
-    const isLatest = (a) => a._id === attempts?.[0]?._id;
     return (
         <div className="page">
             <div className="page-header">

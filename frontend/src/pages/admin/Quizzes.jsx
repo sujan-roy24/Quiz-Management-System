@@ -41,6 +41,7 @@ export default function AdminQuizzes() {
 
     useEffect(() => setPage(1), [filters]);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { loadQuizzes(); }, [filters.subject, filters.topic, filters.label]);
     useEffect(() => { api.getSubjects().then(r => setSubjects(r.data)).catch(() => { }); }, []);
     useEffect(() => {

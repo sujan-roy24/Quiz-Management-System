@@ -50,6 +50,7 @@ export default function CreateExam() {
             setTopics([]);
             setForm(f => ({ ...f, dynamicCriteria: { ...f.dynamicCriteria, topic: '' } }));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.dynamicCriteria.subjects]);
 
     // Dynamic: update match count when criteria change

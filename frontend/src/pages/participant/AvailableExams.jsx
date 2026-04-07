@@ -60,7 +60,6 @@ export default function AvailableExams() {
 
                         const start = new Date(ex.startDateTime);
                         const end = new Date(start.getTime() + ex.durationMinutes * 60000);
-                        const timeLeft = getTimeLeft(ex.startDateTime, ex.durationMinutes);
 
                         return (
                             <div key={ex._id} className="exam-card">
